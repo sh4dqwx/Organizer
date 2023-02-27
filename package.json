@@ -19,6 +19,11 @@
   },
   "homepage": "https://github.com/xShyQx/ToDoList#readme",
   "devDependencies": {
+    "dotenv": "^16.0.3",
     "nodemon": "^2.0.20"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.0",
+    "pg": "^8.9.0"
   }
 }

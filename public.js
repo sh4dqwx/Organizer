@@ -1,16 +1,24 @@
-const {readFileSync} = require('fs');
+const {readFileSync} = require("fs");
 
-const homeHTML = readFileSync('public/home.html');
-const homeCSS = readFileSync('public/home.css');
-const homeJS = readFileSync('public/home.js');
+const loginHTML = readFileSync("public/login.html");
+const loginCSS = readFileSync("public/login.css");
 
-const todolistHTML = readFileSync('public/todolist.html');
+const registerHTML = readFileSync("public/register.html");
 
-const calendarHTML = readFileSync('public/calendar.html');
+const homeHTML = readFileSync("public/home.html");
+const homeCSS = readFileSync("public/home.css");
+const homeJS = readFileSync("public/home.js");
 
-const habitsHTML = readFileSync('public/habits.html');
+const todolistHTML = readFileSync("public/todolist.html");
+
+const calendarHTML = readFileSync("public/calendar.html");
+
+const habitsHTML = readFileSync("public/habits.html");
 
 module.exports = {
+    loginHTML,
+    loginCSS,
+    registerHTML,
     homeHTML,
     homeCSS,
     homeJS,

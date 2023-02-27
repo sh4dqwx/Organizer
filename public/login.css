@@ -1,0 +1,52 @@
+:root {
+    --yellow1: #ffffae;
+    --yellow2: #fffb82;
+    --yellow3: #ffec6f;
+    --purple1: #2c0063;
+}
+
+p, label {
+    font-weight: bold;
+    font-size: 20px;
+}
+
+html {
+    height: 98%;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    font-family: sans-serif;
+    background-color: var(--yellow3);
+    text-align: center;
+}
+
+main {
+    background-color: var(--yellow2);
+}
+
+.form {
+    max-width: 400px;
+    margin: 15px;
+    padding: 10px;
+    background-color: var(--yellow1);
+}
+
+.form-input {
+    margin: 10px;
+}
+
+.form-input input {
+    font-size: 20px;
+}
+
+.btn {
+    background-color: var(--purple1);
+    color: white;
+    border-radius: 10px;
+    padding: 5px;
+    margin: 15px 0px;
+}
