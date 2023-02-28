@@ -45,6 +45,11 @@ const server = http.createServer((req, res) => {
         res.end(public.loginCSS);
     }
 
+    else if(req.url === "/login.js") {
+        res.writeHead(200, { "content-type": "text/javascript" });
+        res.end(public.loginJS);
+    }
+
     else if(req.url === "/home") {
         res.writeHead(200, { "content-type": "text/html" });
         res.end(public.homeHTML);

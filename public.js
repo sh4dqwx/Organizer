@@ -2,6 +2,7 @@ const {readFileSync} = require("fs");
 
 const loginHTML = readFileSync("public/login.html");
 const loginCSS = readFileSync("public/login.css");
+const loginJS = readFileSync("public/login.js");
 
 const registerHTML = readFileSync("public/register.html");
 
@@ -18,6 +19,7 @@ const habitsHTML = readFileSync("public/habits.html");
 module.exports = {
     loginHTML,
     loginCSS,
+    loginJS,
     registerHTML,
     homeHTML,
     homeCSS,
