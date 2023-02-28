@@ -35,9 +35,13 @@ const server = http.createServer((req, res) => {
         res.end();
     }
     
-    else if(req.url === "/login") {
+    else if(req.url === "/login" && req.method === "GET") {
         res.writeHead(200, { "content-type": "text/html" });
         res.end(public.loginHTML);
+    }
+
+    else if(req.url === "/login" && req.method === "POST") {
+        res.writeHead(301, { "location": "/home" }).end();
     }
 
     else if(req.url === "/login.css") {
@@ -83,4 +87,4 @@ const server = http.createServer((req, res) => {
     }
 });
 
-server.listen(process.env.PORT);
+server.listen(process.env.PORT || 5000);
