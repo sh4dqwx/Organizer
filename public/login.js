@@ -1,22 +1,16 @@
-const formButton = document.getElementById("form-button");
+const form = document.querySelector(".form");
 const loginInput = document.getElementById("login");
 const passwordInput = document.getElementById("password");
 
-formButton.addEventListener("click", async() => {
-    try {
-        const user = {
+form.addEventListener("submit", async(event) => {
+    event.preventDefault();
+    
+    fetch("/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
             "nickname": loginInput.value,
             "password": passwordInput.value
-        };
-        await fetch("/login", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify(user)
         })
-            .then(response => response.json)
-            .then(data => console.log(data))
-            .catch(err => console.log(err));
-    } catch(err) {
-        console.log(err);
-    }
+    });
 });

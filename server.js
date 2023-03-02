@@ -41,7 +41,15 @@ const server = http.createServer((req, res) => {
     }
 
     else if(req.url === "/login" && req.method === "POST") {
-        res.writeHead(301, { "location": "/home" }).end();
+        let body = "";
+        req.on("data", (chunk) => {
+            body += chunk;
+        });
+        req.on("end", () => {
+            const data = JSON.parse(body);
+            res.writeHead(200);
+            res.end();
+        });
     }
 
     else if(req.url === "/login.css") {
