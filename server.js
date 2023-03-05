@@ -5,7 +5,23 @@ const {tasks} = require("./testTasks");
 const {currentDate} = require("./date");
 const {connectDB} = require("./db");
 require("dotenv").config();
+const dbPool = connectDB();
 
+const sendFile = (res, contentType, file) => {
+    res.writeHead(200, { "content-type": contentType });
+    res.end(file);
+};
+
+const redirect = (res, location) => {
+    res.writeHead(301, { "location": location} );
+    res.end();
+}
+
+const encrypt = async(password) => {
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(password, salt);
+    return hashedPassword;
+}
 // async function test() {
 //     const dbPool = connectDB();
 //     await dbPool.connect();
@@ -30,15 +46,11 @@ require("dotenv").config();
 // }
 
 const server = http.createServer((req, res) => {
-    if(req.url === "/") {
-        res.writeHead(301, { "location": "/login" });
-        res.end();
-    }
+    if(req.url === "/")
+        redirect(res, "/login");
     
-    else if(req.url === "/login" && req.method === "GET") {
-        res.writeHead(200, { "content-type": "text/html" });
-        res.end(public.loginHTML);
-    }
+    else if(req.url === "/login" && req.method === "GET")
+        sendFile(res, "text/html", public.loginHTML);
 
     else if(req.url === "/login" && req.method === "POST") {
         let body = "";
@@ -52,30 +64,82 @@ const server = http.createServer((req, res) => {
         });
     }
 
-    else if(req.url === "/login.css") {
-        res.writeHead(200, { "content-type": "text/css" });
-        res.end(public.loginCSS);
+    else if(req.url === "/login.css")
+        sendFile(res, "text/css", public.loginCSS);
+
+    else if(req.url === "/login.js")
+        sendFile(res, "text/javascript", public.loginJS);
+
+    else if(req.url === "/register" && req.method === "GET")
+        sendFile(res, "text/html", public.registerHTML);
+
+    else if(req.url === "/register" && req.method === "POST") {
+        let body = "";
+        req.on("data", (chunk) => {
+            body += chunk;
+        });
+        req.on("end", async() => {
+            const data = JSON.parse(body);
+            let toSend = { "messages": [] };
+            if(data.email === "") {
+                toSend.messages.push("Podaj email");
+            } if(data.nickname === "") {
+                toSend.messages.push("Podaj login");
+            } if(data.password === "") {
+                toSend.messages.push("Podaj hasło");
+            } if(data.repeatPassword === "") {
+                toSend.messages.push("Podaj ponownie hasło");
+            } if(data.password !== data.repeatPassword) {
+                toSend.messages.push("Podane hasła nie są identyczne");
+            }
+            if(toSend.messages.length > 0) {
+                res.writeHead(400, { "content-type": "application/json" });
+                res.end(JSON.stringify(toSend));
+            }
+
+            dbPool.query({
+                text: "SELECT user_id FROM users WHERE nickname = $1",
+                values: [data.nickname]
+            }, (error, result) => {
+                if(error) {
+                    console.log(error);
+                } else if(result.rowCount === 1) {
+                    toSend.messages.push("Podany login już istnieje");
+                    res.writeHead(400, { "content-type": "application/json" });
+                    res.end(JSON.stringify(toSend));
+                } else {
+                    encrypt(data.password)
+                    .then(hashedPassword => { dbPool.query({
+                        text: "INSERT INTO users(email, nickname, password) VALUES($1, $2, $3)",
+                        values: [data.email, data.nickname, hashedPassword]
+                    }, (error, result) => {
+                        if(error) {
+                            console.log(error);
+                        } else {
+                            toSend.messages.push("Dodano użytkownika");
+                            res.writeHead(200, { "content-type": "application/json" });
+                            res.end(JSON.stringify(toSend));
+                        }
+                    })});
+                }
+            });
+        });
     }
 
-    else if(req.url === "/login.js") {
-        res.writeHead(200, { "content-type": "text/javascript" });
-        res.end(public.loginJS);
-    }
+    else if(req.url === "/register.css")
+        sendFile(res, "text/css", public.registerCSS);
 
-    else if(req.url === "/home") {
-        res.writeHead(200, { "content-type": "text/html" });
-        res.end(public.homeHTML);
-    }
+    else if(req.url === "/register.js")
+        sendFile(res, "text/javascript", public.registerJS);
+
+    else if(req.url === "/home")
+        sendFile(res, "text/html", public.homeHTML);
     
-    else if(req.url === "/home.css") {
-        res.writeHead(200, { "content-type": "text/css" });
-        res.end(public.homeCSS);
-    }
+    else if(req.url === "/home.css")
+        sendFile(res, "text/css", public.homeCSS);
     
-    else if(req.url === "/home.js") {
-        res.writeHead(200, { "content-type": "text/javascript" });
-        res.end(public.homeJS);
-    }
+    else if(req.url === "/home.js")
+        sendFile(res, "text/javascript", public.homeJS);
     
     else if(req.url === "/home/tasks") {
         let toSend = {};
@@ -88,7 +152,7 @@ const server = http.createServer((req, res) => {
         res.writeHead(200, { "content-type": "application/json" });
         res.end(JSON.stringify(toSend));
     }
-    
+
     else {
         res.writeHead(404, { "content-type": "text/html" });
         res.end("404 Not Found")
@@ -96,3 +160,7 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(process.env.PORT || 5000);
+
+process.on("SIGINT", () => {
+    dbPool.end(() => console.log("Disconnected from database"));
+});

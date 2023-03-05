@@ -5,8 +5,37 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <link rel="stylesheet" href="register.css">
 </head>
 <body>
-    Rejestracja
+    <main>
+        <div id="title">
+            <h1>Zarejestruj się</h1>
+        </div>
+        <form class="form">
+            <div class="error-messages" id="error-messages"></div>
+            <div class="form-input">
+                <label for="email">Email</label>
+                <input type="email" id="email">
+            </div>
+            <div class="form-input">
+                <label for="login">Login</label>
+                <input type="text" id="login">
+            </div>
+            <div class="form-input">
+                <label for="password">Hasło</label>
+                <input type="password" id="password">
+            </div>
+            <div class="form-input">
+                <label for="password">Powtórz hasło</label>
+                <input type="password" id="repeat-password">
+            </div>
+            <button type="submit" class="btn" id="form-button">Zarejestruj się</button>
+        </form>
+        <div id="login-link">
+            <p><a href="login">Zaloguj się</a></p>
+        </div>
+    </main>
+    <script src="register.js"></script>
 </body>
 </html>
