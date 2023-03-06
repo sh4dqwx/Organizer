@@ -35,6 +35,10 @@ main {
     background-color: var(--yellow1);
 }
 
+.error-messages {
+    color: red;
+}
+
 .form-input {
     margin: 10px;
 }

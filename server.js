@@ -1,11 +1,12 @@
 const http = require("http");
 const bcrypt = require("bcrypt");
 const public = require("./public");
-const {tasks} = require("./testTasks");
 const {currentDate} = require("./date");
 const {connectDB} = require("./db");
 require("dotenv").config();
+
 const dbPool = connectDB();
+const sessions = {};
 
 const sendFile = (res, contentType, file) => {
     res.writeHead(200, { "content-type": contentType });
@@ -13,37 +14,68 @@ const sendFile = (res, contentType, file) => {
 };
 
 const redirect = (res, location) => {
-    res.writeHead(301, { "location": location} );
+    res.writeHead(302, { "location": location} );
     res.end();
 }
 
-const encrypt = async(password) => {
-    const salt = await bcrypt.genSalt();
-    const hashedPassword = await bcrypt.hash(password, salt);
-    return hashedPassword;
+const readData = (req) => {
+    return new Promise((resolve) => {
+        let body = "";
+        req.on("data", (chunk) => body += chunk);
+        req.on("end", () => resolve(JSON.parse(body)));
+    });
 }
-// async function test() {
-//     const dbPool = connectDB();
-//     await dbPool.connect();
-//     const user = {
-//         "email": "test@test.pl",
-//         "nickname": "test",
-//         "password": "test"
-//     };
-//     const salt = await bcrypt.genSalt();
-//     const hashedPassword = await bcrypt.hash(user.password, salt);
-//     dbPool.query({
-//         text: "INSERT INTO users(email, nickname, password) VALUES($1, $2, $3)",
-//         values: [user.email, user.nickname, hashedPassword]
-//     }, (err, res) => {
-//         if(err) {
-//             console.log(err);
-//         } else {
-//             console.log("Dodano użytkownika");
-//         }
-//     });
-//     dbPool.end();
-// }
+
+const dataValidation = (dataJSON) => {
+    return new Promise((resolve, reject) => {
+        let errorJSON = { "error": [] };
+        if(dataJSON.email === "")
+            errorJSON.error.push("Podaj email");
+        if(dataJSON.login === "")
+            errorJSON.error.push("Podaj login");
+        if(dataJSON.password === "")
+            errorJSON.error.push("Podaj hasło");
+        if(errorJSON.error.length > 0) reject(errorJSON);
+        else resolve(dataJSON);
+    });
+}
+
+const getUser = (data) => {
+    return new Promise((resolve, reject) => {
+        dbPool.query({
+            text: "SELECT * FROM users WHERE login = $1",
+            values: [data.login]
+        }, (err, res) => {
+            if(err)
+                console.log(err);
+            else if(res.rowCount === 0)
+                reject({ "error": ["Podany użytkownik nie istnieje"] });
+            else bcrypt.compare(data.password, res.rows[0].password, (errC, resC) => {
+                if(errC)
+                    console.log(errC);
+                else if(!resC)
+                    reject({ "error": ["Niepoprawne hasło"] });
+                else resolve(res.rows[0]);
+            });
+        })
+    })
+}
+
+const createSession = (user) => {
+    return new Promise((resolve) => {
+        const sessionId = Math.random().toString(36).substring(2, 15);
+        const expirationTime = new Date();
+        expirationTime.setHours(expirationTime.getHours() + 1);
+        dbPool.query({
+            text: "INSERT INTO sessions(session_id, user_id) VALUES($1, $2)",
+            values: [sessionId, user.user_id]
+        }, (err) => {
+            if(err)
+                console.log(err);
+            else resolve(sessionId);
+        })
+    });
+}
 
 const server = http.createServer((req, res) => {
     if(req.url === "/")
@@ -53,14 +85,19 @@ const server = http.createServer((req, res) => {
         sendFile(res, "text/html", public.loginHTML);
 
     else if(req.url === "/login" && req.method === "POST") {
-        let body = "";
-        req.on("data", (chunk) => {
-            body += chunk;
-        });
-        req.on("end", () => {
-            const data = JSON.parse(body);
-            res.writeHead(200);
-            res.end();
+        readData(req)
+        .then(data => dataValidation(data))
+        .then(data => getUser(data))
+        .then(user => createSession(user))
+        .then(sessionId => {
+            res.writeHead(302, {
+                "set-cookie": `sessionId=${sessionId}`,
+                "location": "/home"
+            }).end();
+        })
+        .catch(error => {
+            res.writeHead(400, { "content-type": "application/json" });
+            res.end(JSON.stringify(error));
         });
     }
 
@@ -98,9 +135,9 @@ const server = http.createServer((req, res) => {
             }
 
             dbPool.query({
-                text: "SELECT user_id FROM users WHERE nickname = $1",
+                text: "SELECT * FROM users WHERE nickname = $1",
                 values: [data.nickname]
-            }, (error, result) => {
+            }, async(error, result) => {
                 if(error) {
                     console.log(error);
                 } else if(result.rowCount === 1) {
@@ -108,8 +145,9 @@ const server = http.createServer((req, res) => {
                     res.writeHead(400, { "content-type": "application/json" });
                     res.end(JSON.stringify(toSend));
                 } else {
-                    encrypt(data.password)
-                    .then(hashedPassword => { dbPool.query({
+                    const salt = await bcrypt.genSalt();
+                    const hashedPassword = await bcrypt.hash(data.password, salt);
+                    dbPool.query({
                         text: "INSERT INTO users(email, nickname, password) VALUES($1, $2, $3)",
                         values: [data.email, data.nickname, hashedPassword]
                     }, (error, result) => {
@@ -120,7 +158,7 @@ const server = http.createServer((req, res) => {
                             res.writeHead(200, { "content-type": "application/json" });
                             res.end(JSON.stringify(toSend));
                         }
-                    })});
+                    });
                 }
             });
         });

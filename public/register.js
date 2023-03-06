@@ -9,7 +9,7 @@ form.addEventListener("submit", async(event) => {
     event.preventDefault();
 
     try {
-        await fetch("/register", {
+        fetch("/register", {
             method: "POST",
             headers: { "content-type": "application/json" },
             body: JSON.stringify({
