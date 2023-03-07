@@ -67,8 +67,8 @@ const createSession = (user) => {
         const expirationTime = new Date();
         expirationTime.setHours(expirationTime.getHours() + 1);
         dbPool.query({
-            text: "INSERT INTO sessions(session_id, user_id) VALUES($1, $2)",
-            values: [sessionId, user.user_id]
+            text: "INSERT INTO sessions VALUES($1, $2, $3)",
+            values: [sessionId, user.user_id, expirationTime]
         }, (err) => {
             if(err)
                 console.log(err);
