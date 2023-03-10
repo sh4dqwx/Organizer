@@ -1,3 +1,7 @@
+const {connectDB} = require("./db");
+const dbPool = connectDB();
+const bcrypt = require("bcrypt");
+
 const dataValidation = (dataJSON) => {
     return new Promise((resolve, reject) => {
         let errorJSON = { "error": [] };
@@ -49,6 +53,27 @@ const createSession = (user) => {
     });
 };
 
+const deleteSession = (sessionId) => {
+    return new Promise((resolve) => {
+        dbPool.query({
+            text: "DELETE FROM sessions WHERE session_id = $1",
+            values: [sessionId]
+        }, (err) => {
+            if(err)
+                console.log(err);
+            else resolve();
+        });
+    });
+};
+
+const checkCookie = (req) => {
+    return new Promise((resolve, reject) => {
+        if(req.headers.cookie === undefined)
+            reject();
+        else resolve(req.headers.cookie.split("=")[1]);
+    })
+}
+
 const checkSession = (sessionId) => {
     return new Promise((resolve, reject) => {
         dbPool.query({
@@ -72,6 +97,8 @@ module.exports = {
     dataValidation,
     getUserFromLogin,
     createSession,
+    deleteSession,
+    checkCookie,
     checkSession,
     deleteOutdatedSessions
 }

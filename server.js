@@ -9,6 +9,8 @@ const {
     dataValidation,
     getUserFromLogin,
     createSession,
+    deleteSession,
+    checkCookie,
     checkSession,
     deleteOutdatedSessions
 } = require("./serverAuth");
@@ -38,7 +40,8 @@ const server = http.createServer((req, res) => {
         redirect(res, "/login");
     
     else if(req.url === "/login" && req.method === "GET")
-        checkSession(req.headers.cookie.split("=")[1])
+        checkCookie(req)
+        .then(sessionId => checkSession(sessionId))
         .then(() => redirect(res, "/home"))
         .catch(() => sendFile(res, "text/html", public.loginHTML));
 
@@ -64,6 +67,18 @@ const server = http.createServer((req, res) => {
 
     else if(req.url === "/login.js")
         sendFile(res, "text/javascript", public.loginJS);
+
+    else if(req.url === "/logout") {
+        checkCookie(req)
+        .then(sessionId => deleteSession(sessionId))
+        .then(() => {
+            res.writeHead(302, {
+                "set-cookie": "sessionId=; Max-Age=0",
+                "location": "/login"
+            }).end();
+        })
+        .catch(() => redirect(res, "/login"));
+    }
 
     else if(req.url === "/register" && req.method === "GET")
         sendFile(res, "text/html", public.registerHTML);
@@ -129,7 +144,8 @@ const server = http.createServer((req, res) => {
         sendFile(res, "text/javascript", public.registerJS);
 
     else if(req.url === "/home") {
-        checkSession(req.headers.cookie.split("=")[1])
+        checkCookie(req)
+        .then(sessionId => checkSession(sessionId))
         .then(() => sendFile(res, "text/html", public.homeHTML))
         .catch(() => redirect(res, "/login"));
     }
@@ -142,7 +158,8 @@ const server = http.createServer((req, res) => {
     
     else if(req.url === "/home/tasks") {
         let toSend = {};
-        checkSession(req.headers.cookie.split("=")[1])
+        checkCookie(req)
+        .then(sessionId => checkSession(sessionId))
         .then(user => {
             toSend.login = user.login;
             toSend.currentDate = currentDate();

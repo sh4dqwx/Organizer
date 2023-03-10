@@ -2,6 +2,7 @@ const title = document.getElementById("title");
 const todolist = document.getElementById("todolist-list");
 const calendar = document.getElementById("calendar-list");
 const habits = document.getElementById("habits-list");
+const logoutBtn = document.getElementById("logout-btn");
 
 fetch("/home/tasks")
 .then(response => response.json())
@@ -21,3 +22,9 @@ fetch("/home/tasks")
     }
 })
 .catch(error => console.log(error));
+
+logoutBtn.addEventListener("click", () => {
+    fetch("/logout")
+    .then(response => window.location.href = response.url)
+    .catch(error => console.log(error));
+});

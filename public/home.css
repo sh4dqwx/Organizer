@@ -15,6 +15,15 @@ body {
     text-align: center;
 }
 
+.logout-btn-container {
+    position: relative;
+}
+
+.logout-btn-container button {
+    position: absolute;
+    right: 0;
+}
+
 main {
     display: flex;
     width: 100%;

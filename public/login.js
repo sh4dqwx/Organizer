@@ -6,7 +6,8 @@ const passwordInput = document.getElementById("password");
 const handleResponse = (response) => {
     return new Promise((resolve, reject) => {
         if(response.status === 400)
-            reject(response.json());
+            response.json()
+            .then(data => reject(data));
         else resolve(response);
     })
 }
@@ -26,7 +27,8 @@ form.addEventListener("submit", (event) => {
     .then(response => window.location.href = response.url)
     .catch(error => {
         let tmp = "";
-        error.messages.forEach(message => {
+        console.log(error);
+        error.error.forEach(message => {
             tmp += message + '<br>';
         });
         errorMessages.innerHTML = tmp;
