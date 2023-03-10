@@ -7,7 +7,7 @@ const handleResponse = (response) => {
     return new Promise((resolve, reject) => {
         if(response.status === 400)
             reject(response.json());
-        else resolve();
+        else resolve(response);
     })
 }
 
@@ -19,10 +19,11 @@ form.addEventListener("submit", (event) => {
         body: JSON.stringify({
             "login": loginInput.value,
             "password": passwordInput.value
-        })
+        }),
+        redirect: "follow"
     })
     .then(response => handleResponse(response))
-    .then(() => errorMessages.innerHTML = "")
+    .then(response => window.location.href = response.url)
     .catch(error => {
         let tmp = "";
         error.messages.forEach(message => {
