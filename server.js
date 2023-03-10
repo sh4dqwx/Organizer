@@ -8,11 +8,14 @@ const {connectDB} = require("./db");
 const {
     dataValidation,
     getUserFromLogin,
+    checkUserNotExists,
+    hashPassword,
+    createUser,
     createSession,
     deleteSession,
     checkCookie,
     checkSession,
-    deleteOutdatedSessions
+    deleteOutdatedSessions,
 } = require("./serverAuth");
 
 const dbPool = connectDB();
@@ -84,56 +87,24 @@ const server = http.createServer((req, res) => {
         sendFile(res, "text/html", public.registerHTML);
 
     else if(req.url === "/register" && req.method === "POST") {
-        let body = "";
-        req.on("data", (chunk) => {
-            body += chunk;
-        });
-        req.on("end", async() => {
-            const data = JSON.parse(body);
-            let toSend = { "messages": [] };
-            if(data.email === "") {
-                toSend.messages.push("Podaj email");
-            } if(data.nickname === "") {
-                toSend.messages.push("Podaj login");
-            } if(data.password === "") {
-                toSend.messages.push("Podaj hasło");
-            } if(data.repeatPassword === "") {
-                toSend.messages.push("Podaj ponownie hasło");
-            } if(data.password !== data.repeatPassword) {
-                toSend.messages.push("Podane hasła nie są identyczne");
-            }
-            if(toSend.messages.length > 0) {
-                res.writeHead(400, { "content-type": "application/json" });
-                res.end(JSON.stringify(toSend));
-            }
-
-            dbPool.query({
-                text: "SELECT * FROM users WHERE nickname = $1",
-                values: [data.nickname]
-            }, async(error, result) => {
-                if(error) {
-                    console.log(error);
-                } else if(result.rowCount === 1) {
-                    toSend.messages.push("Podany login już istnieje");
-                    res.writeHead(400, { "content-type": "application/json" });
-                    res.end(JSON.stringify(toSend));
-                } else {
-                    const salt = await bcrypt.genSalt();
-                    const hashedPassword = await bcrypt.hash(data.password, salt);
-                    dbPool.query({
-                        text: "INSERT INTO users(email, nickname, password) VALUES($1, $2, $3)",
-                        values: [data.email, data.nickname, hashedPassword]
-                    }, (error, result) => {
-                        if(error) {
-                            console.log(error);
-                        } else {
-                            toSend.messages.push("Dodano użytkownika");
-                            res.writeHead(200, { "content-type": "application/json" });
-                            res.end(JSON.stringify(toSend));
-                        }
-                    });
-                }
-            });
+        readData(req)
+        .then(data => dataValidation(data))
+        .then(data => {
+            delete data.repeatPassword;
+            return checkUserNotExists(data);
+        })
+        .then(data => hashPassword(data))
+        .then(data => createUser(data))
+        .then(user => createSession(user))
+        .then(sessionId => {
+            res.writeHead(302, {
+                "set-cookie": `sessionId=${sessionId}`,
+                "location": "/home"
+            }).end();
+        })
+        .catch(error => {
+            res.writeHead(400, { "content-type": "application/json" });
+            res.end(JSON.stringify(error));
         });
     }
 

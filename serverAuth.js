@@ -11,6 +11,10 @@ const dataValidation = (dataJSON) => {
             errorJSON.error.push("Podaj login");
         if(dataJSON.password === "")
             errorJSON.error.push("Podaj hasło");
+        if(dataJSON.repeatPassword === "")
+            errorJSON.error.push("Podaj hasło drugi raz");
+        if(dataJSON.repeatPassword !== undefined && dataJSON.password !== dataJSON.repeatPassword)
+            errorJSON.error.push("Podane hasła nie są takie same");
         if(errorJSON.error.length > 0) reject(errorJSON);
         else resolve(dataJSON);
     });
@@ -30,9 +34,58 @@ const getUserFromLogin = (data) => {
                 if(errC)
                     console.log(errC);
                 else if(!resC)
-                    reject({ "error": ["Niepoprawne hasło"] });
+                    reject({ "error": ["Niepoprawne hasło"] });   
                 else resolve(res.rows[0]);
             });
+        });
+    });
+};
+
+const checkUserNotExists = (data) => {
+    return new Promise((resolve, reject) => {
+        dbPool.query({
+            text: "SELECT * FROM users WHERE login = $1",
+            values: [data.login]
+        }, (err, res) => {
+            if(err)
+                console.log(err);
+            else if(res.rowCount === 0)
+                resolve(data);
+            else reject({ "error": ["Podany użytkownik już istnieje"] });
+        });
+    });
+};
+
+const hashPassword = (data) => {
+    return new Promise((resolve) => {
+        bcrypt.genSalt()
+        .then(salt => bcrypt.hash(data.password, salt))
+        .then(password => {
+            data.password = password;
+            resolve(data);
+        })
+        .catch(error => console.log(error));
+    });
+};
+
+const createUser = (data) => {
+    return new Promise((resolve) => {
+        dbPool.query({
+            text: "INSERT INTO users(email, login, password) VALUES($1, $2, $3)",
+            values: [data.email, data.login, data.password]
+        }, (err) => {
+            if(err)
+                console.log(err);
+            else {
+                dbPool.query({
+                    text: "SELECT * FROM users WHERE login = $1",
+                    values: [data.login]
+                }, (err2, res) => {
+                    if(err2)
+                        console.log(err2);
+                    else resolve(res.rows[0]);
+                });
+            }
         });
     });
 };
@@ -48,7 +101,13 @@ const createSession = (user) => {
         }, (err) => {
             if(err)
                 console.log(err);
-            else resolve(sessionId);
+            else {
+                dbPool.query({
+                    text: "UPDATE users SET recentlogin = NOW() WHERE user_id = $1",
+                    values: [user.user_id]
+                })
+                resolve(sessionId);
+            }
         });
     });
 };
@@ -96,6 +155,9 @@ const deleteOutdatedSessions = () => {
 module.exports = {
     dataValidation,
     getUserFromLogin,
+    checkUserNotExists,
+    hashPassword,
+    createUser,
     createSession,
     deleteSession,
     checkCookie,
