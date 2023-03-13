@@ -127,9 +127,20 @@ const deleteSession = (sessionId) => {
 
 const checkCookie = (req) => {
     return new Promise((resolve, reject) => {
-        if(req.headers.cookie === undefined)
+        const cookieList = req.headers.cookie.split(" ");
+        let sessionCookie = undefined;
+        cookieList.forEach(cookie => {
+            cookie = cookie.split("=");
+            console.log(cookie);
+            if(cookie[0] === "sessionId") {
+                sessionCookie = cookie[1];
+                return;
+            }
+        });
+
+        if(sessionCookie === undefined)
             reject();
-        else resolve(req.headers.cookie.split("=")[1]);
+        else resolve(sessionCookie);
     })
 }
 

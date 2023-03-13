@@ -54,6 +54,7 @@ const server = http.createServer((req, res) => {
         .then(data => getUserFromLogin(data))
         .then(user => createSession(user))
         .then(sessionId => {
+            console.log(sessionId);
             res.writeHead(302, {
                 "set-cookie": `sessionId=${sessionId}`,
                 "location": "/home"
