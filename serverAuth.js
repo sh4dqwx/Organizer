@@ -131,7 +131,6 @@ const checkCookie = (req) => {
         let sessionCookie = undefined;
         cookieList.forEach(cookie => {
             cookie = cookie.split("=");
-            console.log(cookie);
             if(cookie[0] === "sessionId") {
                 sessionCookie = cookie[1];
                 return;

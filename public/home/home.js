@@ -20,6 +20,32 @@ fetch("/home/tasks")
         });
         todolist.innerHTML = list;
     }
+
+    if(data.calendarTasks.length === 0) {
+        calendar.innerHTML = "<p>Brak zadań</p>";
+    } else {
+        let list = "";
+        data.calendarTasks.forEach(task => {
+            list += `<div class="task">
+            <input type="radio">
+            <label>${task.content}</label>
+            </div>`;
+        });
+        calendar.innerHTML = list;
+    }
+
+    if(data.habitTasks.length === 0) {
+        habits.innerHTML = "<p>Brak zadań</p>";
+    } else {
+        let list = "";
+        data.habitTasks.forEach(task => {
+            list += `<div class="task">
+            <input type="radio">
+            <label>${task.content}</label>
+            </div>`;
+        });
+        habits.innerHTML = list;
+    }
 })
 .catch(error => console.log(error));
 

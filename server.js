@@ -17,6 +17,7 @@ const {
     checkSession,
     deleteOutdatedSessions,
 } = require("./serverAuth");
+const { getTodayTasks } = require("./serverTasks");
 
 const dbPool = connectDB();
 
@@ -54,7 +55,6 @@ const server = http.createServer((req, res) => {
         .then(data => getUserFromLogin(data))
         .then(user => createSession(user))
         .then(sessionId => {
-            console.log(sessionId);
             res.writeHead(302, {
                 "set-cookie": `sessionId=${sessionId}`,
                 "location": "/home"
@@ -132,10 +132,12 @@ const server = http.createServer((req, res) => {
         let toSend = {};
         checkCookie(req)
         .then(sessionId => checkSession(sessionId))
-        .then(user => {
+        .then(async(user) => {
             toSend.login = user.login;
             toSend.currentDate = currentDate();
-            toSend.tasks = [];
+            toSend.tasks = await getTodayTasks(user.user_id);
+            toSend.calendarTasks = [];
+            toSend.habitTasks = [];
             res.writeHead(200, { "content-type": "application/json" });
             res.end(JSON.stringify(toSend));
         })
