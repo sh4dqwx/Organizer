@@ -1,23 +1,11 @@
 const http = require("http");
-const bcrypt = require("bcrypt");
 const public = require("./public");
 require("dotenv").config();
 
 const {currentDate} = require("./date");
 const {connectDB} = require("./db");
-const {
-    dataValidation,
-    getUserFromLogin,
-    checkUserNotExists,
-    hashPassword,
-    createUser,
-    createSession,
-    deleteSession,
-    checkCookie,
-    checkSession,
-    deleteOutdatedSessions,
-} = require("./serverAuth");
-const { getTodayTasks } = require("./serverTasks");
+const auth = require("./serverAuth");
+const taskController = require("./serverTasks");
 
 const dbPool = connectDB();
 
@@ -44,16 +32,16 @@ const server = http.createServer((req, res) => {
         redirect(res, "/login");
     
     else if(req.url === "/login" && req.method === "GET")
-        checkCookie(req)
-        .then(sessionId => checkSession(sessionId))
+        auth.checkCookie(req)
+        .then(sessionId => auth.checkSession(sessionId))
         .then(() => redirect(res, "/home"))
         .catch(() => sendFile(res, "text/html", public.loginHTML));
 
     else if(req.url === "/login" && req.method === "POST") {
         readData(req)
-        .then(data => dataValidation(data))
-        .then(data => getUserFromLogin(data))
-        .then(user => createSession(user))
+        .then(data => auth.dataValidation(data))
+        .then(data => auth.getUserFromLogin(data))
+        .then(user => auth.createSession(user))
         .then(sessionId => {
             res.writeHead(302, {
                 "set-cookie": `sessionId=${sessionId}`,
@@ -73,8 +61,8 @@ const server = http.createServer((req, res) => {
         sendFile(res, "text/javascript", public.loginJS);
 
     else if(req.url === "/logout") {
-        checkCookie(req)
-        .then(sessionId => deleteSession(sessionId))
+        auth.checkCookie(req)
+        .then(sessionId => auth.deleteSession(sessionId))
         .then(() => {
             res.writeHead(302, {
                 "set-cookie": "sessionId=; Max-Age=0",
@@ -89,14 +77,14 @@ const server = http.createServer((req, res) => {
 
     else if(req.url === "/register" && req.method === "POST") {
         readData(req)
-        .then(data => dataValidation(data))
+        .then(data => auth.dataValidation(data))
         .then(data => {
             delete data.repeatPassword;
-            return checkUserNotExists(data);
+            return auth.checkUserNotExists(data);
         })
-        .then(data => hashPassword(data))
-        .then(data => createUser(data))
-        .then(user => createSession(user))
+        .then(data => auth.hashPassword(data))
+        .then(data => auth.createUser(data))
+        .then(user => auth.createSession(user))
         .then(sessionId => {
             res.writeHead(302, {
                 "set-cookie": `sessionId=${sessionId}`,
@@ -116,8 +104,8 @@ const server = http.createServer((req, res) => {
         sendFile(res, "text/javascript", public.registerJS);
 
     else if(req.url === "/home") {
-        checkCookie(req)
-        .then(sessionId => checkSession(sessionId))
+        auth.checkCookie(req)
+        .then(sessionId => auth.checkSession(sessionId))
         .then(() => sendFile(res, "text/html", public.homeHTML))
         .catch(() => redirect(res, "/login"));
     }
@@ -130,14 +118,42 @@ const server = http.createServer((req, res) => {
     
     else if(req.url === "/home/tasks") {
         let toSend = {};
-        checkCookie(req)
-        .then(sessionId => checkSession(sessionId))
+        auth.checkCookie(req)
+        .then(sessionId => auth.checkSession(sessionId))
         .then(async(user) => {
             toSend.login = user.login;
             toSend.currentDate = currentDate();
-            toSend.tasks = await getTodayTasks(user.user_id);
+            toSend.tasks = await taskController.getTodayTasks(user.user_id);
             toSend.calendarTasks = [];
             toSend.habitTasks = [];
+            res.writeHead(200, { "content-type": "application/json" });
+            res.end(JSON.stringify(toSend));
+        })
+        .catch(() => redirect(res, "/login"));
+    }
+
+    else if(req.url === "/todolist") {
+        auth.checkCookie(req)
+        .then(sessionId => auth.checkSession(sessionId))
+        .then(() => sendFile(res, "text/html", public.todolistHTML))
+        .catch(() => redirect(res, "/login"));
+    }
+
+    else if(req.url === "/todolist.css") {
+        sendFile(res, "text/css", public.todolistCSS);
+    }
+
+    else if(req.url === "/todolist.js") {
+        sendFile(res, "text/javascript", public.todolistJS);
+    }
+
+    else if(req.url === "/todolist/tasks") {
+        let toSend = {};
+        auth.checkCookie(req)
+        .then(sessionId => auth.checkSession(sessionId))
+        .then(async(user) => {
+            toSend.categories = await taskController.getTaskCategories();
+            toSend.tasks = await taskController.getTasks(user.user_id);
             res.writeHead(200, { "content-type": "application/json" });
             res.end(JSON.stringify(toSend));
         })
@@ -152,7 +168,7 @@ const server = http.createServer((req, res) => {
 
 server.listen(process.env.PORT || 5000);
 
-setInterval(deleteOutdatedSessions, 60000);
+setInterval(auth.deleteOutdatedSessions, 60000);
 
 process.on("SIGINT", () => {
     dbPool.end(() => console.log("Disconnected from database"));

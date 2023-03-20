@@ -15,31 +15,32 @@ body {
     text-align: center;
 }
 
-.logout-btn-container {
+.return-btn-container {
     position: relative;
 }
 
-.logout-btn-container button {
+.return-btn-container button {
     position: absolute;
-    right: 0;
+    left: 0;
 }
 
 main {
     display: flex;
+    width: 100%;
 }
 
 .list-container {
-    flex-grow: 1;
-    background-color: var(--yellow2);
     margin: 0 5px;
+    background-color: var(--yellow2);
     text-align: center;
 }
 
-.task {
-    background-color: var(--yellow1);
-    margin: 5px;
-    padding: 10px;
-    text-align: left;
+.category-list-container {
+    flex-grow: 1;
+}
+
+.task-list-container {
+    flex-grow: 4;
 }
 
 .btn {

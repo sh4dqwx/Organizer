@@ -5,8 +5,23 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <link rel="stylesheet" href="todolist.css">
 </head>
 <body>
-    To-do list
+    <div class="return-btn-container">
+        <button type="button" class="btn" id="return-btn">Powrót</button>
+    </div>
+    <div id="title"><h1>To-do List</h1></div>
+    <main>
+        <div class="list-container category-list-container">
+            <h2>Kategorie</h2>
+            <div class="list" id="category-list"></div>
+        </div>
+        <div class="list-container task-list-container">
+            <div class="list" id="task-list"></div>
+            <button type="button" class="btn">Dodaj zadanie</button>
+        </div>
+    </main>
+    <script src="todolist.js"></script>
 </body>
 </html>

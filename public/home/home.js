@@ -3,6 +3,9 @@ const todolist = document.getElementById("todolist-list");
 const calendar = document.getElementById("calendar-list");
 const habits = document.getElementById("habits-list");
 const logoutBtn = document.getElementById("logout-btn");
+const todolistBtn = document.getElementById("todolist-btn");
+const calendarBtn = document.getElementById("calendar-btn");
+const habitsBtn = document.getElementById("habits-btn");
 
 fetch("/home/tasks")
 .then(response => response.json())
@@ -51,6 +54,12 @@ fetch("/home/tasks")
 
 logoutBtn.addEventListener("click", () => {
     fetch("/logout")
+    .then(response => window.location.href = response.url)
+    .catch(error => console.log(error));
+});
+
+todolistBtn.addEventListener("click", () => {
+    fetch("/todolist")
     .then(response => window.location.href = response.url)
     .catch(error => console.log(error));
 });

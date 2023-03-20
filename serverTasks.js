@@ -27,7 +27,18 @@ const getTasks = (userId) => {
     });
 };
 
+const getTaskCategories = () => {
+    return new Promise((resolve, reject) => {
+        dbPool.query("SELECT * FROM categories", (error, result) => {
+            if(error)
+                console.log(error);
+            else resolve(result.rows);
+        })
+    })
+}
+
 module.exports = {
     getTodayTasks,
-    getTasks
+    getTasks,
+    getTaskCategories
 };

@@ -13,6 +13,8 @@ const homeCSS = readFileSync("public/home/home.css");
 const homeJS = readFileSync("public/home/home.js");
 
 const todolistHTML = readFileSync("public/todolist/todolist.html");
+const todolistCSS = readFileSync("public/todolist/todolist.css");
+const todolistJS = readFileSync("public/todolist/todolist.js");
 
 const calendarHTML = readFileSync("public/calendar/calendar.html");
 
@@ -29,6 +31,8 @@ module.exports = {
     homeCSS,
     homeJS,
     todolistHTML,
+    todolistCSS,
+    todolistJS,
     calendarHTML,
     habitsHTML
 };
