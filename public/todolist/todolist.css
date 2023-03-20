@@ -15,13 +15,18 @@ body {
     text-align: center;
 }
 
-.return-btn-container {
+.header-btn-container {
     position: relative;
 }
 
-.return-btn-container button {
+#return-btn {
     position: absolute;
     left: 0;
+}
+
+#logout-btn {
+    position: absolute;
+    right: 0;
 }
 
 main {
@@ -41,6 +46,19 @@ main {
 
 .task-list-container {
     flex-grow: 4;
+}
+
+.category {
+    margin: 5px;
+    padding: 10px;
+    text-align: left;
+}
+
+.task {
+    background-color: var(--yellow1);
+    margin: 5px;
+    padding: 10px;
+    text-align: left;
 }
 
 .btn {

@@ -15,11 +15,11 @@ body {
     text-align: center;
 }
 
-.logout-btn-container {
+.header-btn-container {
     position: relative;
 }
 
-.logout-btn-container button {
+#logout-btn {
     position: absolute;
     right: 0;
 }
